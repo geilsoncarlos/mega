@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>**** ANÁLISE RESULTADOS MEGA-SENA ****</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        ul {
+            list-style: none;
+        }
+
+        ul li {
+            float: left;
+            padding: 10px;
+            border-bottom: 1px solid #000;
+            border-right: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+
+        ul li:nth-child(10n+1) {
+            clear: both;
+            border-left: 1px solid #000;
+            /*background-color:#ccc;*/
+        }
+
+
+
+
+        
+
+        #pagina {
+            margin: 0 auto
+        }
+
+        /*#grade {
+            width: 420px;
+            height: 280px;
+            background-color: blue;
+            padding: 1px
+        }
+        */
+
+        #escolha {
+            width: 20%;
+            float: left
+        }
+
+        #setas {
+            width: 51.3%;
+            height: 40px;
+            float: left;
+            background-color: green;
+            padding-left: 455px;
+            padding-top: 20px;
+        }
+
+        #grade {
+            width: 40%;
+            float: left;
+            background-color: yellowgreen;
+        }
+
+        #escolha {
+            width: 30%;
+            height: 256px;
+            background-color: red;
+            font-size: 20px;
+        }
+
+        #resultados {
+            width: 15%;
+            height: 256px;
+            float: left;
+            background-color: blue;
+            font-size: 120%;
+
+        }
+
+        #rodape {
+            height: 51%;
+            width: 51%;
+            padding-top: 50px;
+            -moz-box-align: center;
+            float: left;
+        }
+
+        .label {
+            color: white;
+            padding: 8px;
+        }
+    </style>
+    <script src="listardezenas.js"></script>
+</head>
+
+<body>
+    <div id="pagina">
+
+        <h2 align="center">ANÁLISE RESULTADOS MEGA-SENA</h2>
+
+
+        <div id="escolha">
+
+            <br>
+            <br>
+            
+            <span class="label">Concurso nº:</span>
+            <input type="number" name="numeroConcurso" value="1" min="1"
+                style="font-size:24px; width: 100px; text-align: right;" onchange="mostrarSorteio();verificarPalpite()"
+                id="numeroConcurso">
+
+            <br>
+            <br>
+
+            <span class="label">Palpite para análise:</span>
+
+            <input type="text" id="palpite" style="font-size:24px;" name="palpite">
+            </label>
+
+            <br>
+            <br>
+
+            <input type="button" value="Verificar Palpite" onclick="verificarPalpite()">
+            <input type="button" value="Limpar Cartão" onclick="limparCartao()">
+
+        </div>
+
+
+        <div id="grade">
+            <ul id="cartao" onmousedown="teste(event)" onmouseover="teste(event)">
+            </ul>
+        </div>
+
+
+        <div id="resultados">
+            <label style="margin-left: 10px;">Quadras</label><br>
+            <input type="number" name="qtdeQuadras" id="qtdeQuadras" style="margin-left: 10px;"><br>
+            <br>
+            <label style="margin-left: 10px;">Quinas</label><br>
+            <input type="number" name="qtdeQuinas" id="qtdeQuinas" style="margin-left: 10px;"><br>
+            <br>
+            <label style="margin-left: 10px;">Senas</label><br>
+            <input type="number" name="qtdeSenas" id="qtdeSenas" style="margin-left: 10px;">
+        </div>
+
+        <div id="setas">
+            <input type="button" value="▲" style="width:10%;height:80%" onclick="moverPalpite(-10)">
+            <input type="button" value="◄" style="width:10%;height:80%" onclick="moverPalpite(-1)">
+            <input type="button" value="►" style="width:10%;height:80%" onclick="moverPalpite(+1)">
+            <input type="button" value="▼" style="width:10%;height:80%" onclick="moverPalpite(+10)">
+        </div>
+
+        <div id="criacartao">
+            <script>criaCartao2(); mostrarSorteio()</script>
+        </div>
+        <div id="rodape">
+            <footer>&copy; Registered by Geilson Lima</footer>
+        </div>
+    </div>
+</body>
+
+</html>

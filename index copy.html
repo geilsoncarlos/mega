@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>**** ANÁLISE RESULTADOS MEGA-SENA ****</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        ul {
+            list-style: none;
+        }
+
+        ul li {
+            float: left;
+            padding: 10px;
+            border-bottom: 1px solid #000;
+            border-right: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        /*
+        ul li:nth-child(10n){
+        background-color:#888;
+        }
+*/
+
+        ul li:nth-child(10n+1) {
+            clear: both;
+            border-left: 1px solid #000;
+            /*background-color:#ccc;*/
+        }
+
+        /*
+        ul li:nth-child(-10+3){
+        border-top:1px solid #000;
+        }
+*/
+        .quantity {
+            position: relative;
+        }
+
+        .quantity input {
+            width: 45px;
+            height: 42px;
+            line-height: 1.65;
+            float: left;
+            display: block;
+            padding: 0;
+            margin: 0;
+            padding-left: 20px;
+            border: none;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+            font-size: 1rem;
+            border-radius: 4px;
+        }
+    </style>
+    <script src="listardezenas.js"></script>
+</head>
+
+<body>
+    <h2 align="center">ANÁLISE RESULTADOS MEGA-SENA</h2>
+    <div id="escolha" style="width:30%">
+        <label>Digite o número do concurso...:
+            <input type="number" name="numeroConcurso" value="1" min="1" onchange="mostrarSorteio()"
+                id="numeroConcurso">
+        </label> <br>
+
+        <label>Digite o palpite para análise...:
+            <input type="text" id="palpite" name="palpite">
+        </label> <br>
+
+        <input type="button" value="Verificar Palpite" onclick="verificarPalpite()">
+
+    </div>
+    <p>
+    <div id="setas">
+        <input type="button" value="▲" onclick="moverPalpite(-10)">
+        <input type="button" value="◄" onclick="moverPalpite(-1)">
+        <input type="button" value="►" onclick="moverPalpite(+1)">
+        <input type="button" value="▼" onclick="moverPalpite(+10)">
+    </div>
+    </p>
+
+    <p>
+    <div id="grade" style="width:500px;height:500px;background-color:blue;padding:1px">
+        <ul id="cartao" onclick="teste(event)">
+        </ul>
+    </div>
+    </p>
+
+    <p>
+    
+    <div id="resultados">
+        <label style="margin-left: 10px;">Quadras</label><br>
+        <input type="number" name="qtdeQuadras" id="qtdeQuadras" style="margin-left: 10px;"><br>
+        <label style="margin-left: 10px;">Quinas</label><br>
+        <input type="number" name="qtdeQuinas" id="qtdeQuinas" style="margin-left: 10px;"><br>
+        <label style="margin-left: 10px;">Senas</label><br>
+        <input type="number" name="qtdeSenas" id="qtdeSenas" style="margin-left: 10px;">
+    </div>
+
+    </p>
+
+
+    <p><br> <input type="button" value="Limpar Cartão" onclick="limparCartao()">
+    </p>
+    <p>
+    <div id="comandos" style="width:30%">
+        <script>criaCartao2(); mostrarSorteio()</script>
+    </div>
+    </p>
+
+    <footer>&copy; Registered by Geilson Lima</footer>
+
+</body>
+
+</html>
