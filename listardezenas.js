@@ -15,6 +15,7 @@ function mostrarSorteio() {
                     dezenas = resultado.split("-")
 
                     //console.log(pConcurso, concurso, resultado, dezenas);
+                    //console.log("TESTE", resultado, dezenas)
                     marcarDezenas(dezenas)
                     $('#palpite').val(resAux) // Colocar o resulta no campo de palpites                    
                 }
@@ -42,6 +43,7 @@ function criaCartao2() {
 
 function marcarDezenas(pDezenas) {
     aux = $('#palpite').val()
+    //console.log("AYX...:",aux)
     limparCartao();
     $('#palpite').val(aux)
 
@@ -124,7 +126,7 @@ function verificarPalpite() {
 function marcarPalpites() {
     pPalpite = ($('#palpite').val()).trim()
     pPalpite = pPalpite.split(" ")
-    console.log(pPalpite)
+    //console.log(pPalpite)
     marcarDezenas(pPalpite)
 }
 
@@ -137,10 +139,10 @@ function teste(pEvento) {
 
     tmp = pEvento
     tmp.preventDefault();
-    console.log(tmp, tmp.type, tmp.buttons)
+    //console.log(tmp, tmp.type, tmp.buttons)
 
     if (tmp.type === "mouseover" && tmp.buttons === 0) return
-    
+
     corElemento = tmp.srcElement.style.backgroundColor
     if (corElemento === "red") {
         tmp.srcElement.style.backgroundColor = "white"
@@ -163,7 +165,7 @@ function moverPalpite(pOperacao) {
     aux = $('#palpite').val()
     aux = aux.trim()
     vetor = aux.split(" ")
-    console.log(vetor)
+    //console.log(vetor)
     novoPalpite = ""
     for (i = 0; i < vetor.length; i++) {
         aux2 = parseInt(vetor[i]) + pOperacao
@@ -175,7 +177,7 @@ function moverPalpite(pOperacao) {
     }
     $('#palpite').val(novoPalpite)
     marcarPalpites()
-    console.log(novoPalpite.trim())
+    //console.log(novoPalpite.trim())
     verificarPalpite()
 
 }
