@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game Grid Mega-Sena</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+    body {
+      background-color: #111;
+      font-family: 'Orbitron', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+      user-select: none;
+    }
+
+    h1 {
+      color: #00ffc8;
+      text-shadow: 0 0 8px #00ffc8;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 64px);
+      gap: 12px;
+      background-color: #222;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 0 25px rgba(0, 255, 200, 0.4);
+    }
+
+    button {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      font-size: 16px;
+      color: #00ffc8;
+      background: linear-gradient(145deg, #1f1f1f, #2a2a2a);
+      box-shadow: 4px 4px 8px #0b0b0b, -4px -4px 8px #1f1f1f;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s ease-in-out;
+    }
+
+    button:hover {
+      filter: brightness(1.1);
+    }
+
+    button.pressed {
+      box-shadow: inset 3px 3px 6px #0b0b0b, inset -3px -3px 6px #1f1f1f;
+      background: linear-gradient(145deg, #171717, #252525);
+      color: #ff5e5e;
+    }
+
+    #reset-btn, #check-btn, #show-rows-btn {
+      padding: 10px 20px;
+      background-color: #00ffc8;
+      color: #111;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      margin: 10px;
+    }
+
+    #reset-btn:hover, #check-btn:hover, #show-rows-btn:hover {
+      background-color: #00e0a1;
+    }
+
+    #pressed-numbers, #acertos, #acertos-count, #imported-lines, #first-rows {
+      margin-top: 20px;
+      color: #00ffc8;
+      font-size: 18px;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+  <h1>Game Grid Mega-Sena</h1>
+  <button id="reset-btn">Resetar Todos</button>
+  <div class="grid" id="grid-container"></div>
+  <button id="check-btn">Verificar Acertos</button>
+  <button id="show-rows-btn">Mostrar 5 Primeiras Linhas</button>
+  <div id="pressed-numbers">Números Pressionados: Nenhum</div>
+  <div id="acertos"></div>
+  <div id="acertos-count"></div>
+  <div id="imported-lines">Linhas Importadas: 0</div>
+  <div id="first-rows"></div>
+
+  <script>
+    let selectedNumbers = [];
+    let isMouseDown = false;
+
+    // Função para carregar o arquivo CSV localmente
+    function carregarArquivoCSV() {
+      fetch('Mega-Sena.csv') // Arquivo CSV local
+        .then(response => response.text())
+        .then(text => {
+          const lines = text.split('\n').map(line => line.split(','));
+
+          // Limpar dados existentes
+          document.getElementById('imported-lines').textContent = `Linhas Importadas: ${lines.length}`;
+
+          // Armazenar os dados no banco IndexedDB
+          openDB().then(db => {
+            const tx = db.transaction('concursos', 'readwrite');
+            const store = tx.objectStore('concursos');
+
+            lines.forEach(line => {
+              const bolas = line.slice(2, 8).map(cell => parseInt(cell));
+              if (bolas.length === 6 && bolas.every(n => Number.isInteger(n))) {
+                store.add({ bola1: bolas[0], bola2: bolas[1], bola3: bolas[2], bola4: bolas[3], bola5: bolas[4], bola6: bolas[5] });
+              }
+            });
+
+            tx.oncomplete = () => {
+              document.getElementById('imported-lines').textContent = `Linhas Importadas: ${lines.length}`;
+            };
+          });
+        })
+        .catch(error => {
+          alert('Erro ao carregar o arquivo CSV: ' + error);
+        });
+    }
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('MegaSenaDB', 1);
+        request.onerror = () => reject('Erro ao abrir IndexedDB');
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = e => {
+          const db = e.target.result;
+          db.createObjectStore('concursos', { keyPath: 'id', autoIncrement: true });
+        };
+      });
+    }
+
+    // Função para recuperar todas as linhas do banco de dados
+    async function getAllRows() {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('concursos', 'readonly');
+        const store = tx.objectStore('concursos');
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject('Erro ao recuperar dados');
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      carregarArquivoCSV();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      document.querySelectorAll('.grid button').forEach(btn => btn.classList.remove('pressed'));
+      selectedNumbers = [];
+      updatePressedNumbersDisplay();
+    });
+
+    document.getElementById('show-rows-btn').addEventListener('click', async () => {
+      const data = await getAllRows();
+      if (data.length === 0) {
+        document.getElementById('first-rows').textContent = 'Nenhuma linha importada ainda.';
+        return;
+      }
+      const lines = data.slice(0, 5).map((r, i) => `#${i + 1}: ${r.bola1}, ${r.bola2}, ${r.bola3}, ${r.bola4}, ${r.bola5}, ${r.bola6}`).join('\n');
+      document.getElementById('first-rows').textContent = lines;
+    });
+
+    document.getElementById('check-btn').addEventListener('click', async () => {
+      const data = await getAllRows();
+      if (selectedNumbers.length === 0 || data.length === 0) {
+        alert('Selecione números e carregue a planilha antes.');
+        return;
+      }
+
+      let acertosCount = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0 };
+      data.forEach(row => {
+        const bolas = [row.bola1, row.bola2, row.bola3, row.bola4, row.bola5, row.bola6];
+        const acertos = bolas.filter(n => selectedNumbers.includes(n)).length;
+        if (acertos >= 1 && acertos <= 6) acertosCount[acertos]++;
+        console.log(`Acertos: ${acertos} - Números: ${bolas.join(', ')}`);
+      });
+
+      let resultado = Object.entries(acertosCount)
+        .map(([k, v]) => `${k} Acertos: ${v} Linhas`)
+        .join('\n');
+      document.getElementById('acertos').textContent = resultado;
+      document.getElementById('acertos-count').textContent = resultado;
+    });
+
+    function updatePressedNumbersDisplay() {
+      const display = selectedNumbers.length > 0 ? selectedNumbers.join(', ') : 'Nenhum';
+      document.getElementById('pressed-numbers').textContent = `Números Pressionados: ${display}`;
+    }
+
+    for (let i = 1; i <= 60; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.addEventListener('mousedown', () => toggleButton(btn));
+      btn.addEventListener('mouseenter', () => { if (isMouseDown) toggleButton(btn); });
+      document.getElementById('grid-container').appendChild(btn);
+    }
+
+    function toggleButton(btn) {
+      const num = parseInt(btn.textContent);
+      btn.classList.toggle('pressed');
+      if (btn.classList.contains('pressed')) {
+        if (!selectedNumbers.includes(num)) selectedNumbers.push(num);
+      } else {
+        selectedNumbers = selectedNumbers.filter(n => n !== num);
+      }
+      updatePressedNumbersDisplay();
+    }
+
+    document.body.addEventListener('mousedown', () => isMouseDown = true);
+    document.body.addEventListener('mouseup', () => isMouseDown = false);
+  </script>
+</body>
+</html>
