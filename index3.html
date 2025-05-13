@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game Grid Mega-Sena</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+    body {
+      background-color: #111;
+      font-family: 'Orbitron', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+      user-select: none;
+    }
+
+    h1 {
+      color: #00ffc8;
+      text-shadow: 0 0 8px #00ffc8;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 64px);
+      gap: 12px;
+      background-color: #222;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 0 25px rgba(0, 255, 200, 0.4);
+    }
+
+    button {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      font-size: 16px;
+      color: #00ffc8;
+      background: linear-gradient(145deg, #1f1f1f, #2a2a2a);
+      box-shadow: 4px 4px 8px #0b0b0b, -4px -4px 8px #1f1f1f;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s ease-in-out;
+    }
+
+    button:hover {
+      filter: brightness(1.1);
+    }
+
+    button.pressed {
+      box-shadow: inset 3px 3px 6px #0b0b0b, inset -3px -3px 6px #1f1f1f;
+      background: linear-gradient(145deg, #171717, #252525);
+      color: #ff5e5e;
+    }
+
+    #reset-btn, #check-btn {
+      padding: 10px 20px;
+      background-color: #00ffc8;
+      color: #111;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      margin: 10px;
+    }
+
+    #reset-btn:hover, #check-btn:hover {
+      background-color: #00e0a1;
+    }
+
+    #pressed-numbers, #acertos, #acertos-count, #imported-lines {
+      margin-top: 20px;
+      color: #00ffc8;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Game Grid Mega-Sena</h1>
+  <button id="reset-btn">Resetar Todos</button>
+  <div class="grid" id="grid-container"></div>
+
+  <button id="check-btn">Verificar Acertos</button>
+
+  <div id="pressed-numbers">Números Pressionados: Nenhum</div>
+  <div id="acertos"></div>
+  <div id="acertos-count"></div>
+  <div id="imported-lines">Linhas Importadas: 0</div>
+
+  <script>
+    let excelData = [];
+    let selectedNumbers = [];
+    let isMouseDown = false;
+
+    async function carregarArquivoExcel() {
+      try {
+        const response = await fetch('https://geilsoncarlos.github.io/mega/Mega-Sena.xlsx');
+        const arrayBuffer = await response.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const raw = XLSX.utils.sheet_to_json(sheet);
+
+        
+
+        excelData = raw.slice(1).map(row => {
+          return {
+            bola1: Number(row[4]),
+            bola2: Number(row[5]),
+            bola3: Number(row[6]),
+            bola4: Number(row[7]),
+            bola5: Number(row[8]),
+            bola6: Number(row[9])
+          };
+        }).filter(r => [r.bola1, r.bola2, r.bola3, r.bola4, r.bola5, r.bola6].every(n => !isNaN(n)));
+
+        document.getElementById('imported-lines').textContent = `Linhas Importadas: ${excelData.length}`;
+        console.log('Arquivo carregado com sucesso.');
+        console.log(raw);
+      
+      } catch (error) {
+        alert('Erro ao carregar o arquivo automaticamente: ' + error);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      carregarArquivoExcel();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      document.querySelectorAll('.grid button').forEach(btn => btn.classList.remove('pressed'));
+      selectedNumbers = [];
+      updatePressedNumbersDisplay();
+    });
+
+    function updatePressedNumbersDisplay() {
+      const display = selectedNumbers.length > 0 ? selectedNumbers.join(', ') : 'Nenhum';
+      document.getElementById('pressed-numbers').textContent = `Números Pressionados: ${display}`;
+    }
+
+    document.getElementById('check-btn').addEventListener('click', () => {
+      if (selectedNumbers.length === 0 || excelData.length === 0) {
+        alert('Selecione números e carregue a planilha antes.');
+        return;
+      }
+
+      let acertosCount = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0 };
+      excelData.forEach(row => {
+        const bolas = [row.bola1, row.bola2, row.bola3, row.bola4, row.bola5, row.bola6];
+        const acertos = bolas.filter(n => selectedNumbers.includes(n)).length;
+        if (acertos >= 1 && acertos <= 6) acertosCount[acertos]++;
+      });
+
+      let resultado = Object.entries(acertosCount)
+        .map(([k, v]) => `${k} Acertos: ${v} Linhas`)
+        .join('\n');
+      document.getElementById('acertos').textContent = resultado;
+      document.getElementById('acertos-count').textContent = resultado;
+    });
+
+    for (let i = 1; i <= 60; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.addEventListener('mousedown', () => toggleButton(btn));
+      btn.addEventListener('mouseenter', () => { if (isMouseDown) toggleButton(btn); });
+      document.getElementById('grid-container').appendChild(btn);
+    }
+
+    function toggleButton(btn) {
+      const num = parseInt(btn.textContent);
+      btn.classList.toggle('pressed');
+      if (btn.classList.contains('pressed')) {
+        if (!selectedNumbers.includes(num)) selectedNumbers.push(num);
+      } else {
+        selectedNumbers = selectedNumbers.filter(n => n !== num);
+      }
+      updatePressedNumbersDisplay();
+    }
+
+    document.body.addEventListener('mousedown', () => isMouseDown = true);
+    document.body.addEventListener('mouseup', () => isMouseDown = false);
+  </script>
+</body>
+</html>

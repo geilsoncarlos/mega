@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Grid Circular com Números Guardados</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+    body {
+      background-color: #111;
+      font-family: 'Orbitron', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+      user-select: none;
+    }
+
+    h1 {
+      color: #00ffc8;
+      text-shadow: 0 0 8px #00ffc8;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 64px);
+      gap: 12px;
+      background-color: #222;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 0 25px rgba(0, 255, 200, 0.4);
+    }
+
+    button {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      font-size: 16px;
+      color: #00ffc8;
+      background: linear-gradient(145deg, #1f1f1f, #2a2a2a);
+      box-shadow: 4px 4px 8px #0b0b0b, -4px -4px 8px #1f1f1f;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s ease-in-out;
+    }
+
+    button:hover {
+      filter: brightness(1.1);
+    }
+
+    button.pressed {
+      box-shadow: inset 3px 3px 6px #0b0b0b, inset -3px -3px 6px #1f1f1f;
+      background: linear-gradient(145deg, #171717, #252525);
+      color: #ff5e5e;
+    }
+
+    #reset-btn {
+      padding: 10px 20px;
+      background-color: #00ffc8;
+      color: #111;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      margin-bottom: 20px;
+    }
+
+    #reset-btn:hover {
+      background-color: #00e0a1;
+    }
+
+    #pressed-numbers {
+      margin-top: 20px;
+      color: #ff5e5e;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Game Grid Circular com Números Guardados</h1>
+  <button id="reset-btn">Resetar Todos</button>
+  <div class="grid" id="grid-container"></div>
+  
+  <div id="pressed-numbers">Números Pressionados: Nenhum</div>
+
+  <script>
+    const grid = document.getElementById('grid-container');
+    const resetBtn = document.getElementById('reset-btn');
+    const pressedNumbersDisplay = document.getElementById('pressed-numbers');
+    
+    let isMouseDown = false;
+    let pressedNumbers = [];
+
+    // Controla o estado do botão do mouse
+    document.addEventListener('mousedown', () => isMouseDown = true);
+    document.addEventListener('mouseup', () => isMouseDown = false);
+
+    // Função para resetar todos os botões
+    resetBtn.addEventListener('click', () => {
+      const buttons = document.querySelectorAll('button');
+      buttons.forEach(button => {
+        button.classList.remove('pressed');
+      });
+      pressedNumbers = []; // Limpa os números pressionados
+      updatePressedNumbersDisplay(); // Atualiza a lista na tela
+    });
+
+    // Função para atualizar o display de números pressionados
+    function updatePressedNumbersDisplay() {
+      if (pressedNumbers.length > 0) {
+        pressedNumbersDisplay.textContent = `Números Pressionados: ${pressedNumbers.join(', ')}`;
+      } else {
+        pressedNumbersDisplay.textContent = `Números Pressionados: Nenhum`;
+      }
+    }
+
+    // Criação dos botões da grade
+    for (let i = 1; i <= 60; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+
+      // Mudar estado no mousedown (ao pressionar o botão do mouse)
+      btn.addEventListener('mousedown', () => {
+        btn.classList.toggle('pressed');
+        const btnNumber = parseInt(btn.textContent);
+        
+        if (btn.classList.contains('pressed')) {
+          // Adiciona o número ao array
+          pressedNumbers.push(btnNumber);
+        } else {
+          // Remove o número do array
+          const index = pressedNumbers.indexOf(btnNumber);
+          if (index > -1) {
+            pressedNumbers.splice(index, 1);
+          }
+        }
+
+        updatePressedNumbersDisplay(); // Atualiza o display
+      });
+
+      // Arrastar com botão pressionado
+      btn.addEventListener('mouseenter', () => {
+        if (isMouseDown) {
+          btn.classList.toggle('pressed');
+          const btnNumber = parseInt(btn.textContent);
+          
+          if (btn.classList.contains('pressed')) {
+            pressedNumbers.push(btnNumber);
+          } else {
+            const index = pressedNumbers.indexOf(btnNumber);
+            if (index > -1) {
+              pressedNumbers.splice(index, 1);
+            }
+          }
+
+          updatePressedNumbersDisplay(); // Atualiza o display
+        }
+      });
+
+      grid.appendChild(btn);
+    }
+  </script>
+
+</body>
+</html>
