@@ -10,7 +10,7 @@ const https = require('https');
  */
 function baixarMegaSena(url = null, maxRedirects = 5) {
     // Tenta primeiro com HTTPS, depois HTTP se necessário
-    const urlPrincipal = url || 'http://servicebus2.caixa.gov.br/portaldeloterias/api/resultados/download?modalidade=Mega-Sena';
+    const urlPrincipal = url || 'https://servicebus2.caixa.gov.br/portaldeloterias/api/resultados/download?modalidade=Mega-Sena';
     const nomeArquivo = 'mega-sena.xlsx';
     
     console.log('🔄 Iniciando download dos resultados da Mega-Sena...');
@@ -19,26 +19,29 @@ function baixarMegaSena(url = null, maxRedirects = 5) {
     // Determina se usa HTTP ou HTTPS baseado na URL
     const client = urlPrincipal.startsWith('https:') ? https : http;
     
-    console.log('🔄 Iniciando download dos resultados da Mega-Sena...');
-    console.log(`📡 URL: ${urlPrincipal}`);
-    
     // Cria stream de escrita para o arquivo
     const arquivo = fs.createWriteStream(nomeArquivo);
     
-    // Configurações da requisição com headers de navegador
+    // Configurações da requisição com headers otimizados para servidor
     const options = {
         headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': 'keep-alive',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/octet-stream, */*',
+            'Accept-Language': 'pt-BR,pt;q=0.9',
+            'Accept-Encoding': 'identity', // Remove gzip para evitar problemas
+            'Connection': 'close', // Força fechamento da conexão
+            'Referer': 'https://loterias.caixa.gov.br/',
+            'Origin': 'https://loterias.caixa.gov.br',
+            'DNT': '1',
             'Upgrade-Insecure-Requests': '1',
             'Sec-Fetch-Dest': 'document',
             'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Cache-Control': 'max-age=0'
-        }
+            'Sec-Fetch-Site': 'same-site',
+            'Sec-Fetch-User': '?1',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        },
+        timeout: 30000 // 30 segundos de timeout
     };
     
     // Faz a requisição HTTP/HTTPS com headers
@@ -73,11 +76,33 @@ function baixarMegaSena(url = null, maxRedirects = 5) {
             console.error('📋 Headers da resposta:', response.headers);
             arquivo.destroy();
             
-            // Se for 403 e for HTTPS, tenta com HTTP
+            // Se for 403, tenta URLs alternativas da própria Caixa
+            if (response.statusCode === 403) {
+                console.log('🔄 Tentando URLs alternativas...');
+                arquivo.destroy();
+                
+                const urlsAlternativas = [
+                    'http://servicebus2.caixa.gov.br/portaldeloterias/api/resultados/download?modalidade=Mega-Sena',
+                    'https://loterias.caixa.gov.br/wps/portal/loterias/landing/megasena/!ut/p/a1/04_Sj9CPykssy0xPLMnMz0vMAfGjzOLNDH0MPAzcDbwMPI0sDBxNXAOMwrzCjA0sjIEKIoEKnN0dPUzMfQwMDEwsjAw8XZw8XMwtfQ0MPM2I02-AAzgaENIfrh-FqsQ9wBmoxN_FydLAGAgNTKEK8DkRrb8BDuBooNJvgAMoByEyARyOQC4QBxhV6Mfm5qfoR-SmppZn5iWXFGeWAgBzQs7V/dl5/d5/L2dBISEvZ0FBIS9nQSEh/',
+                    'https://loterias.caixa.gov.br/wps/portal/loterias'
+                ];
+                
+                // Remove a URL atual da lista se existir
+                const urlAtual = urlPrincipal;
+                const proximaUrl = urlsAlternativas.find(url => url !== urlAtual);
+                
+                if (proximaUrl && maxRedirects > 0) {
+                    console.log(`🔄 Tentando: ${proximaUrl}`);
+                    setTimeout(() => baixarMegaSena(proximaUrl, maxRedirects - 1), 2000);
+                    return;
+                }
+            }
+            
+            // Se for 403 e for HTTPS, tenta com HTTP como última opção
             if (response.statusCode === 403 && urlPrincipal.startsWith('https:')) {
-                console.log('🔄 Tentando com HTTP...');
+                console.log('🔄 Última tentativa com HTTP...');
                 const urlHttp = urlPrincipal.replace('https:', 'http:');
-                setTimeout(() => baixarMegaSena(urlHttp, maxRedirects), 1000);
+                setTimeout(() => baixarMegaSena(urlHttp, maxRedirects), 3000);
             }
             return;
         }
@@ -116,5 +141,8 @@ function baixarMegaSena(url = null, maxRedirects = 5) {
     });
 }
 
-// Executa o download - tenta primeiro HTTPS, depois HTTP se der erro
-baixarMegaSena();
+// Adiciona delay inicial para evitar detecção de bot
+console.log('⏳ Aguardando 2 segundos antes de iniciar...');
+setTimeout(() => {
+    baixarMegaSena();
+}, 2000);
