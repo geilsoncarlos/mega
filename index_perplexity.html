@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Resultados Mega-Sena</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        #btnBaixar {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+        
+        #btnBaixar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
+        }
+        
+        #btnBaixar:active {
+            transform: translateY(0);
+        }
+        
+        #btnBaixar:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            min-height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .sucesso {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .erro {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .carregando {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #transparent;
+            border-top: 2px solid #0c5460;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .icon {
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Download Mega-Sena</h1>
+        <p>Clique no botão abaixo para baixar o arquivo Excel com todos os resultados da Mega-Sena diretamente do site oficial da Caixa Econômica Federal.</p>
+        
+        <button id="btnBaixar" onclick="baixarMegaSena()">
+            📥 Baixar Resultados (.xlsx)
+        </button>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        async function baixarMegaSena() {
+            const btn = document.getElementById('btnBaixar');
+            const status = document.getElementById('status');
+            
+            // Desabilitar botão e mostrar loading
+            btn.disabled = true;
+            btn.textContent = '⏳ Baixando...';
+            status.className = 'carregando';
+            status.innerHTML = '<div class="spinner"></div> Fazendo download do arquivo...';
+            
+            try {
+                const response = await fetch('http://servicebus2.caixa.gov.br/portaldeloterias/api/resultados/download?modalidade=Mega-Sena');
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+                }
+                
+                const blob = await response.blob();
+                
+                // Verificar se o arquivo não está vazio
+                if (blob.size === 0) {
+                    throw new Error('O arquivo baixado está vazio');
+                }
+                
+                // Criar link para download
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'mega-sena.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                
+                // Limpeza
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                // Mostrar sucesso
+                status.className = 'sucesso';
+                status.innerHTML = '<span class="icon">✅</span> Arquivo baixado com sucesso! Verifique sua pasta de Downloads.';
+                
+            } catch (error) {
+                console.error('Erro ao baixar arquivo:', error);
+                
+                // Mostrar erro
+                status.className = 'erro';
+                status.innerHTML = `<span class="icon">❌</span> Erro ao baixar: ${error.message}`;
+                
+                // Verificar se é erro de CORS
+                if (error.message.includes('CORS') || error.name === 'TypeError') {
+                    status.innerHTML += '<br><small>💡 Dica: Este erro pode ocorrer devido às políticas de CORS do navegador. Tente usar uma extensão para desabilitar CORS ou execute em um servidor local.</small>';
+                }
+            } finally {
+                // Reabilitar botão
+                btn.disabled = false;
+                btn.textContent = '📥 Baixar Resultados (.xlsx)';
+            }
+        }
+        
+        // Limpar status ao clicar novamente
+        document.getElementById('btnBaixar').addEventListener('click', function() {
+            const status = document.getElementById('status');
+            if (status.className === 'sucesso' || status.className === 'erro') {
+                status.className = '';
+                status.innerHTML = '';
+            }
+        });
+    </script>
+</body>
+</html>
