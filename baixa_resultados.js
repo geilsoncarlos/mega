@@ -22,9 +22,6 @@ function baixarMegaSena(url = null, maxRedirects = 5) {
     console.log('🔄 Iniciando download dos resultados da Mega-Sena...');
     console.log(`📡 URL: ${urlPrincipal}`);
     
-    // Determina se usa HTTP ou HTTPS baseado na URL
-    const client = urlPrincipal.startsWith('https:') ? https : http;
-    
     // Cria stream de escrita para o arquivo
     const arquivo = fs.createWriteStream(nomeArquivo);
     
