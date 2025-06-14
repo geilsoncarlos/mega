@@ -10,7 +10,7 @@ const https = require('https');
  */
 function baixarMegaSena(url = null, maxRedirects = 5) {
     // Tenta primeiro com HTTPS, depois HTTP se necessário
-    const urlPrincipal = url || 'https://servicebus2.caixa.gov.br/portaldeloterias/api/resultados/download?modalidade=Mega-Sena';
+    const urlPrincipal = url || 'http://servicebus2.caixa.gov.br/portaldeloterias/api/resultados/download?modalidade=Mega-Sena';
     const nomeArquivo = 'mega-sena.xlsx';
     
     console.log('🔄 Iniciando download dos resultados da Mega-Sena...');
